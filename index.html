@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>健康日志 v0.1</title>
+    <style>
+        *{box-sizing:border-box;margin:0;font-family:'Segoe UI',sans-serif}body{background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);min-height:100vh;padding:20px;color:#333}.container{max-width:1000px;margin:0 auto;background:#fff;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.08);padding:30px}header{text-align:center;margin-bottom:40px;border-bottom:2px solid #eaeaea;padding-bottom:20px}h1{color:#2d3436;font-size:2.5rem}.subtitle{color:#636e72;margin-top:8px}section{margin-bottom:40px;background:#f8f9fa;padding:25px;border-radius:15px;border-left:5px solid #6c5ce7}h2{color:#2d3436;margin-bottom:20px;display:flex;align-items:center;gap:10px}.input-group{margin-bottom:15px;display:flex;align-items:center;flex-wrap:wrap;gap:10px}label{min-width:150px;font-weight:600}input{padding:10px 15px;border:2px solid #ddd;border-radius:8px;font-size:1rem;transition:border 0.3s;flex-grow:1;max-width:300px}input:focus{border-color:#6c5ce7;outline:none}button{padding:12px 24px;margin:10px 10px 0 0;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:1rem;transition:all 0.3s;display:inline-flex;align-items:center;gap:8px}#addBtn{background:#00b894;color:#fff}#addBtn:hover{background:#00a085}#clearBtn{background:#dfe6e9;color:#2d3436}#clearBtn:hover{background:#b2bec3}table{width:100%;border-collapse:collapse;margin-top:15px}th,td{border:1px solid #ddd;padding:12px 15px;text-align:center}th{background:#6c5ce7;color:#fff}tr:nth-child(even){background:#f2f2f2}.deleteBtn{background:#ff7675;color:#fff;padding:6px 12px;border-radius:5px;border:none;cursor:pointer}.hint{color:#636e72;margin-top:15px;font-style:italic}.notes p{margin:10px 0;padding-left:10px;border-left:3px solid #00cec9}footer{text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid #eee;color:#636e72}
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-heartbeat"></i> 甲亢指标追踪看板</h1>
+            <p class="subtitle">架构师的第一份可执行协议 · v0.1</p>
+        </header>
+        <main>
+            <section class="data-entry">
+                <h2><i class="fas fa-edit"></i> 记录今日数据</h2>
+                <div class="input-group"><label for="date">日期：</label><input type="date" id="date" value=""></div>
+                <div class="input-group"><label for="tsh">TSH：</label><input type="number" id="tsh" step="0.001" placeholder="0.010"></div>
+                <div class="input-group"><label for="ft4">FT4：</label><input type="number" id="ft4" step="0.1" placeholder="18.7"></div>
+                <button id="addBtn"><i class="fas fa-plus"></i> 添加记录</button>
+                <button id="clearBtn"><i class="fas fa-trash"></i> 清空记录</button>
+            </section>
+            <section class="data-display">
+                <h2><i class="fas fa-history"></i> 历史记录</h2>
+                <table><thead><tr><th>日期</th><th>TSH</th><th>FT4</th><th>操作</th></tr></thead><tbody id="logTable"></tbody></table>
+                <p class="hint">数据保存在浏览器本地，刷新不会丢失。</p>
+            </section>
+            <section class="notes">
+                <h2><i class="fas fa-sticky-note"></i> 系统备注</h2>
+                <p>✅ 第一个可部署项目</p><p>📈 下一版本：Python可视化</p><p>⚙️ 技术栈：HTML+CSS+JS</p>
+            </section>
+        </main>
+        <footer><p>构建者: <strong>小楂</strong> | 版本: <strong>2025.12</strong> | 状态: <strong>🟢 运行中</strong></p></footer>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded',()=>{
+            document.getElementById('date').valueAsDate=new Date();
+            loadLogs();
+            document.getElementById('addBtn').addEventListener('click',addLog);
+            document.getElementById('clearBtn').addEventListener('click',clearLogs);
+        });
+        function addLog(){
+            let d=document.getElementById('date').value,t=document.getElementById('tsh').value,f=document.getElementById('ft4').value;
+            if(!d||!t||!f)return alert('请填写所有字段');
+            let logs=getLogs();
+            logs.push({date:d,tsh:parseFloat(t),ft4:parseFloat(f)});
+            localStorage.setItem('healthLogs',JSON.stringify(logs));
+            loadLogs();
+            document.getElementById('tsh').value='';
+            document.getElementById('ft4').value='';
+        }
+        function loadLogs(){
+            let logs=getLogs(),t=document.getElementById('logTable');
+            t.innerHTML='';
+            if(logs.length===0){
+                t.innerHTML='<tr><td colspan="4">暂无记录</td></tr>';
+                return;
+            }
+            logs.forEach((l,i)=>{
+                let r=t.insertRow();
+                r.innerHTML=`<td>${l.date}</td><td>${l.tsh}</td><td>${l.ft4}</td><td><button class="deleteBtn" onclick="deleteLog(${i})">删除</button></td>`;
+            });
+        }
+        function getLogs(){
+            return JSON.parse(localStorage.getItem('healthLogs')||'[]');
+        }
+        function deleteLog(i){
+            let logs=getLogs();
+            logs.splice(i,1);
+            localStorage.setItem('healthLogs',JSON.stringify(logs));
+            loadLogs();
+        }
+        function clearLogs(){
+            if(confirm('确定清空所有记录吗？')){
+                localStorage.removeItem('healthLogs');
+                loadLogs();
+            }
+        }
+    </script>
+</body>
+</html>
